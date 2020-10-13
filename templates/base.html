@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}장고 웹 프로그래밍 메인 화면(CSS, JS 사용){% endblock %}</title>
+
+  <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+
+  <!-- Naver Cloud 접속 옵션 -->
+  <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=4qx55vg8sn&submodules=geocoder"></script>
+   
+  <script src="/static/js/popper.min.js"></script>
+  <script src="/static/js/slim.min.js"></script>
+  <script src="/static/js/bootstrap.min.js"></script>
+  <script src="https://kit.fontawesome.com/c998a172fe.js"></script>
+
+  <script src="/static/js/exif-js/exif.js"></script>
+
+  <!-- Datatable (테이블 정렬 기능) 2020-05-29 added -->
+  <script src="/static/js/jquery-3.5.1.js"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap4.min.css">
+
+  <!-- 2020-09-08(온라인 파일들 오프라인으로 대체시키고 한글화 작업) -->
+  <!-- /static/js로 시작되는 부분들은 오프라인 주소로 시작되는 부분들은 온라인-->
+
+  <!-- Chart 관련 플러그-인 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+
+  <script src="/static/js/1.10.19/js/jquery.dataTables.min.js"></script>
+  <script src="/static/js/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+  <script src="/static/js/1.5.6/dataTables.buttons.min.js"></script>
+  
+  
+  <!--
+  <script src="//cdn.datatables.net/buttons/1.5.6/js/buttons.bootstrap4.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+  <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+  <script src="//cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+  <script src="//cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+  <script src="//cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js"></script>
+  <script src="//cdn.datatables.net/buttons/1.5.6/js/buttons.print.min.js"></script>
+  <script src="//cdn.datatables.net/buttons/1.5.6/js/buttons.colVis.min.js"></script>
+  -->
+  <script src="/static/js/1.5.6/buttons.bootstrap4.min.js"></script>
+  <script src="/static/js/jszip.min.js"></script>
+  <script src="/static/js/1.5.6/buttons.html5.min.js"></script>
+  <script src="/static/js/1.5.6/buttons.print.min.js"></script>
+  <script src="/static/js/1.5.6/buttons.colVis.min.js"></script> 
+    
+  {% block extra-style %}{% endblock %}
+  <style>
+    body {
+      padding-top: 75px;
+    }
+
+    .navbar-nav li:hover > ul.dropdown-menu {
+      display: block;
+      text-align: center;
+    }
+
+    .dropdown-submenu {
+      position:relative;
+      text-align: center;
+    }
+        
+    .dropdown-submenu>.dropdown-menu {
+      top:0;
+      left:100%;
+      margin-top:-6px;
+    }
+</style>
+</head>
+<body>
+  <nav class="navbar navbar-dark bg-white fixed-top navbar-expand-lg navbar-expand-sm">
+    <div class="container-fluid">
+      <a href="{% url 'city:index' %}"><span class="navbar-brand mx-1 mb-0 font-weight-bold font-italic text-info">
+          <img src="/static/img/suhdol_logo.jpg" style="width: 80%"></span></a>
+      <div class="collapse navbar-collapse" id="navbar-content">
+        <ul class="navbar-nav mr-auto">
+          <!-- History dropdown menu -->
+          <li class="nav-item dropdown mx-1 btn">
+            <a href="#" class="nav-link dropdown-toggle text-dark" data-toggle="dropdown">
+                <img src="/static/img/data.jpg" width="30px", height="30px"><strong>데이터</strong></a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="{% url 'city:aslog_list' %}">신호제어기 A/S 이력 조회</a>
+              <a class="dropdown-item" href="#">영상검지기 A/S 이력 조회</a>
+              <a class="dropdown-item" href="{% url 'city:intersection_stat' %}">신호제어기 도시별 통계</a>
+            </div>
+          </li>
+
+          <!-- Register dropdown menu -->
+          <li class="nav-item dropdown mx-1 btn">
+            <a href="#" class="nav-link dropdown-toggle text-dark" data-toggle="dropdown">
+                <img src="/static/img/register.jpg" width="30px", height="30px"><strong>등록</strong></a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="{% url 'city:city_add' %}">도시</a>
+              <a class="dropdown-item" href="{% url 'city:intersection_add' %}">교차로</a>
+            </div>
+          </li>
+
+          <!-- Modify(Change) dropdown menu -->
+          <li class="nav-item dropdown mx-1 btn">
+            <a href="#" class="nav-link dropdown-toggle text-dark" data-toggle="dropdown">
+                <img src="/static/img/modify.jpg" width="30px", height="30px"><strong>변경</strong></a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="{% url 'city:city_change' %}">도시</a>
+              <a class="dropdown-item" href="{% url 'city:intersection_change' %}">교차로</a>
+              <a class="dropdown-item" href="{% url 'city:aslog_change' %}">신호제어기 A/S</a>
+            </div>
+          </li>
+
+          <!-- 미세먼저 정보 dropdown menu -->
+          <li class="nav-item dropdown mx-1 btn">
+            <a href="#" class="nav-link dropdown-toggle text-dark" data-toggle="dropdown">
+                <img src="/static/img/dust.png" width="30px", height="30px"><strong>미세먼지</strong></a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="{% url 'city:dustlog_list' %}">실시간 측정 결과</a>
+              <a class="dropdown-item" href="{% url 'city:dustlog_hour_list' %}">시간대별 측정 결과</a>
+              <a class="dropdown-item" href="{% url 'city:dustlog_day_list' %}">일별 측정 결과</a>
+              <a class="dropdown-item" href="#">월별 측정 결과</a>
+            </div>
+          </li>
+
+          <!-- ETC dropdown menu -->
+          <li class="nav-item dropdown mx-1 btn">
+            <a href="#" class="nav-link dropdown-toggle text-dark" data-toggle="dropdown">
+                <img src="/static/img/etc.jpg" width="30px", height="30px"><strong>기타</strong></a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="#">프로그램 정보</a>
+            </div>
+          </li>
+        </ul>
+                
+        <!-- 계정 접속 및 해제와 암호 변경 -->
+        <ul class="navbar-nav ml-1 mr-1">
+          <li class="nav-item dropdown mx-1 btn btn-primary">
+            {% if user.is_active %}
+              <a href="#" class="nav-link dropdown-toggle text-white" data-toggle='dropdown'>
+                  <i class="fas fa-user"></i>&ensp;{% firstof user.get_short_name user.get_username %}&ensp;
+              </a>
+              <div class="dropdown-menu">
+                <a href="{% url 'logout' %}" class="dropdown-item">로그아웃</a>
+                <a href="{% url 'password_change' %}" class="dropdown-item">암호변경</a>
+              </div>
+            {% else %}
+              <a href="#" class="nav-link dropdown-toggle text-white" data-toggle='dropdown'>
+                  <i class="fas fa-user"></i>&ensp;Anonymous&ensp;
+              </a>
+              <div class="dropdown-menu">
+                <a href="{% url 'login' %}" class="dropdown-item">로그인</a>
+                <a href="{% url 'register' %}" class="dropdown-item">회원가입</a>
+              </div>
+            {% endif %}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container2">
+  {% block content %}{% endblock content %}
+  </div>
+
+  {% block footer %}{% endblock %}
+
+  {% block extra-script %}{% endblock %}
+</body>
+</html>

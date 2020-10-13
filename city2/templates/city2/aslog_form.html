@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}A/S 로그{% endblock %}
+
+{% block content %}
+  <br />
+  {% if form.errors %}
+    <div class="alert alert-danger">
+      <div class="font-weight-bold">Wrong Please correct the error(s) below.</div>
+      {{ form.errors }}
+    </div>
+  {% endif %}
+
+  <form action="." method="post" class="card pt-3">{% csrf_token %}
+    <!-- 교차로명 -->
+    <div class="form-group row">    
+      <span class="col-form-label col-sm-2 ml-3 font-weight-bold text-muted"> 도시명</span>
+      <div class="col-sm-2">
+        {{ form.city_no|add_class:"form-control"|attr:"id=city_no"|attr:"readonly" }}
+      </div>
+    </div>
+
+    <!-- 교차로명 -->
+    <div class="form-group row">    
+      <span class="col-form-label col-sm-2 ml-3 font-weight-bold text-muted"> 교차로명</span>
+      <div class="col-sm-2">
+        {{ form.int_no|add_class:"form-control"|attr:"id=int_no"|attr:"readonly" }}
+      </div>
+    </div>
+
+    <!-- 증상 -->
+    <div class="form-group row">
+      {{ form.title|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+      <div class="col-sm-5">
+        {{ form.title|add_class:"form-control"|attr:"autofocus" }}
+      </div>
+    </div>
+    <!-- 신고자 -->
+    <div class="form-group row">
+      {{ form.reporter|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+      <div class="col-sm-5">
+        {{ form.reporter|add_class:"form-control"|attr:"autofocus" }}
+      </div>
+    </div>
+    <!-- slug -->
+    <div class="form-group row">
+      {{ form.slug|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+      <div class="col-sm-5">
+        {{ form.slug|add_class:"form-control"|attr:"readonly" }}
+      </div>
+      <small class="form-text text-muted">{{ form.slug.help_text }}</small>
+    </div>
+
+    <!-- 작업일 -->
+    <div class="form-group row">
+      {{ form.as_date|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+      <div class="col-sm-5">
+        {{ form.as_date|add_class:"form-control"|attr:"type:date"}}
+      </div>
+      <small class="form-text text-muted">{{ form.as_date.help_text }}</small>
+    </div>
+
+    <!-- 작업자 -->
+    <div class="form-group row">
+      {{ form.as_worker|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+      <div class="col-sm-5">
+        {{ form.as_worker|add_class:"form-control" }}
+      </div>
+      <small class="form-text text-muted">{{ form.as_worker.help_text }}</small>
+    </div>
+
+    <!-- 조치 -->
+    <div class="form-group row">
+      {{ form.description|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+      <div class="col-sm-5">
+        {{ form.description|add_class:"form-control" }}
+      </div>
+      <small class="form-text text-muted">{{ form.description.help_text }}</small>
+    </div>
+
+    <!-- 세부 정보 -->
+    <div class="form-group row">
+      {{ form.detail_info|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+      <div class="col-sm-5">
+        {{ form.detail_info|add_class:"form-control" }}
+      </div>
+    </div>
+    <!-- tag -->
+    <div class="form-group row">
+      {{ form.tags|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+      <div class="col-sm-5">
+        {{ form.tags|add_class:"form-control" }}
+      </div>
+      <small class="form-text text-muted">{{ form.tags.help_text }}</small>
+    </div>
+
+    <script>
+      $(document).ready(() => {
+        var tmp_str = window.location.href;
+        var arr = tmp_str.split('/')
+        
+        console.log(arr);
+        console.log(arr[arr.length - 1]);
+        console.log(arr[arr.length - 2]);
+        console.log(arr[arr.length - 3]);
+        
+        if (arr[arr.length - 4] == "add") {
+          $("#city_no").val(arr[arr.length - 3]);
+          $("#int_no").val(arr[arr.length - 2]);
+        }
+      });
+    </script>
+
+    <div class="form-group">
+      <div class="offset-sm-2 col-sm-5">
+        <input type="submit" value="등록" class="btn btn-info" />
+      </div>
+    </div>
+  </form>
+
+{% endblock content %}

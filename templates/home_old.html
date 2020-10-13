@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>장고 웹 프로그래밍 메인 화면(CSS, JS 사용)</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    
+    <script src="/static/js/popper.min.js"></script>
+    <script src="/static/js/slim.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    
+    <style>
+        body {
+            padding-top: 90px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary fixed-top navbar-expand-lg">
+        <div class="container">
+            <a href="#" class="navbar-brand">NavBar</a>
+            <button class="navbar-toggler" type="button"
+                    data-toggle="collapse" data-target="#navbar-content">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbar-content">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">Link</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">HTML5</a>
+                        <div class="dropdown-menu">
+                            <a href="" class="dropdown-item">Geolocation</a>
+                            <a href="" class="dropdown-item">Drag and Drop</a>
+                            <div class="dropdown-divider"></div>
+                            <a href="" class="dropdown-item">Motion</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link disabled" tabindex="-1">Disabled</a>
+                    </li>
+                </ul>
+                <form action="" class="form-inline my-2 my-lg-0">
+                    <input type="search" class="form-control mr-sm-2" placeholder="검색" />
+                    <input type="submit" class="btn btn-outline-success my-2 my-sm-0">
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container bg-warning">
+        <h4>This is CONTENT area.</h4>
+    </div>
+
+    <footer class="fixed-bottom bg-info">
+        <h4>This is FOOTER area.</h4>
+    </footer>
+</body>
+</html>

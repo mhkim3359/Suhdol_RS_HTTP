@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}교차로 정보 수정{% endblock %}
+
+{% block content %}
+<br />
+<script>
+    $(document).ready(function() {
+      var table = $('#example').DataTable(
+        {
+          'dom' : "<'row'<'col-sm-12 col-md-6'Bl><'col-sm-12 col-md-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+          "pageLength": 50,
+          pagingType : "full_numbers",
+          buttons: ['excel', 'pdf', 'print', 'colvis'],
+        }
+      );
+      table.buttons().container().appendTo('#reminders_wrapper .col-md-6:eq(0)');
+    } );
+</script>
+<table id="example" class="table table-bordered table-sm table-hover">
+    <thead>
+        <tr class="table-info text-center">
+            <th>도시명</th>
+            <th>교차로명</th>
+            <th>장비타입</th>
+            <th>제조사</th>
+            <th>모델명</th>
+            <th>제조일</th>
+            <th>CPU 버전</th>
+            <th>CPU 보드 종류</th>
+            <th>외관 상태</th>
+            <th>보드 실장 상태</th>
+            <th>기타</th>
+            <th>변경</th>
+            <th>삭제</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for item in object_list %}
+        <tr>
+            <td>{{ item.int_id }}</td>
+            <td>{{ item.int_name }}</td>
+            <td>{{ item.product_type }}</td>
+            <td>{{ item.man_company }}</td>
+            <td>{{ item.model_name }}</td>
+            <td>{{ item.make_date }}</td>
+            <td>{{ item.cpu_version }}</td>
+            <td>{{ item.cpu_bd_kind }}</td>
+            <td>{{ item.case_status }}</td>
+            <td>{{ item.bd_ins_kind }}</td>
+            <td>{{ item.description }}</td>
+            <td><a href="{% url 'city:intersection_update' item.id %}">변경</a></td>
+            <td><a href="{% url 'city:intersection_delete' item.id %}">삭제</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock content %}

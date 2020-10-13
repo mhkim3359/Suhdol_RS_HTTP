@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}도시 정보 등록{% endblock %}
+
+{% block content %}
+    <br />
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <div class="font-weight-bold">Wrong Please correct the error(s) below.</div>
+            {{ form.errors }}
+        </div>
+    {% endif %}
+
+    {% if form.is_multipart or formset.is_multipart %}
+        <form enctype="multipart/form-data" method="post">
+    {% else %}
+        <form action="" method="post">
+    {% endif %}
+    {% csrf_token %}
+
+        <h4>도시 정보 추가 및 갱신</h4>
+        <fieldset class="card pt-3">
+            <div class="form-group row">
+                {{ form.city_name|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+                <div class="col-sm-5">
+                    {{ form.city_name|add_class:"form-control"|attr:"autofocus" }}
+                </div>
+            </div>
+            <div class="form-group row">
+                {{ form.latitude|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+                <div class="col-sm-5">
+                    {{ form.latitude|add_class:"form-control"|attr:"autofocus" }}
+                </div>
+            </div>
+            <div class="form-group row">
+                {{ form.longitude|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+                <div class="col-sm-5">
+                    {{ form.longitude|add_class:"form-control"|attr:"autofocus" }}
+                </div>
+            </div>
+            <div class="form-group row">
+                {{ form.zoom|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+                <div class="col-sm-5">
+                    {{ form.zoom|add_class:"form-control"|attr:"autofocus" }}
+                </div>
+            </div>
+            <div class="form-group row">
+                {{ form.description|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+                <div class="col-sm-5">
+                    {{ form.description|add_class:"form-control" }}
+                </div>
+            </div>
+        </fieldset>
+        <br>
+
+        <div class="form-group">
+            <div class="offset-sm-3 col-sm-5">
+                <input type="submit" value="등록" class="btn btn-info" />
+            </div>
+        </div>
+
+    </form>
+
+{% endblock content %}

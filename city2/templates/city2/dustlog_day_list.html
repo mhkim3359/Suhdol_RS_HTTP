@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}일별 미세먼지 정보{% endblock %}
+
+{% block extra-style %}
+<style>
+    td { white-space:pre }
+    #pm2-5 {
+        color: coral;
+    }
+    #pm10-0 {
+        color: deepskyblue;
+    }
+    #green-label {
+      color:green;
+    }
+    #orange-label {
+      color:orange;
+    }
+    #red-label {
+      color:red;
+    }
+</style>
+{% endblock extra-style %}
+
+{% block content %}
+<br />
+<div class="row">
+  <div id="pm2-5" class="col-sm-12 col-md-6"> &diams; 초미세먼지(PM2.5, 입자의 크기 2.5&micro;m) : 연간평균치 15㎍/㎥ 이하, 24시간평균치 35㎍/㎥ 이하</div>
+  <div class="col-sm-12 col-md-2"><img src="/static/img/smile.png" style="width: 15%"><label id="green-label"> : 좋음(0 ~ 15)</label></div>
+  <div class="col-sm-12 col-md-2"><img src="/static/img/normal.png" style="width: 15%"><label id="orange-label"> : 보통(16 ~ 35)</label></div>
+  <div class="col-sm-12 col-md-2"><img src="/static/img/angry.png" style="width: 15%"><label id="red-label"> : 나쁨(36 ~ )</label></div>
+</div>
+<div class="row">
+  <div id="pm10-0" class="col-sm-12 col-md-6"> &diams; 미세먼지(PM10, 입자의 크기 10.0&micro;m) : 연간평균치 50㎍/㎥ 이하, 24시간평균치 80㎍/㎥ 이하</div>
+  <div class="col-sm-12 col-md-2"><img src="/static/img/smile.png" style="width: 15%"><label id="green-label">: 좋음(0 ~ 30)</label></div>
+  <div class="col-sm-12 col-md-2"><img src="/static/img/normal.png" style="width: 15%"><label id="orange-label"> : 보통(31 ~ 80)</label></div>
+  <div class="col-sm-12 col-md-2"><img src="/static/img/angry.png" style="width: 15%"><label id="red-label"> : 나쁨(81 ~ )</label></div>
+</div>
+<script>
+  $(document).ready(function() {
+    var table = $('#example').DataTable(
+      {
+        'dom'       : "<'row'<'col-sm-12 col-md-6'Bl><'col-sm-12 col-md-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+        "pageLength": 50,
+        "filter"    : false,
+        order       : [[0, 'desc']], // asc 또는 desc
+        buttons     : ['excel', 'print', 'colvis'],
+      }
+    );
+    table.buttons().container().appendTo('#reminders_wrapper .col-md-6:eq(0)');
+  } );
+</script>
+
+<table id="example" class="table table-bordered table-sm table-hover">
+  <thead>
+    <tr class="table-info">
+      <th>측정 날짜 및 시간</th>
+      <th>PM 1.0(극초미세먼지)</th>
+      <th>PM 2.5(초미세먼지)</th>
+      <th>PM 2.5 상태</th>
+      <th>PM 10.0(미세먼지)</th>
+      <th>PM 10.0 상태</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in object_list %}
+      <tr>
+        <!-- view DustLogDayLV()에서 date 각 필들을 alias 시켜 정의하여 
+          실시간 표시처럼 "date -c" 방식을 사용하지 않았음-->
+        <td>{{ item.date }}</td>
+        <td>{{ item.pm10 }}</td>
+        <td>{{ item.pm25 }}</td>
+        {% if item.pm25 <= 15 %}
+          <td><img src="/static/img/smile.png" style="width: 10%"></td>
+        {% elif item.pm25 > 15 and item.pm25 <= 35 %}
+          <td><img src="/static/img/normal.png" style="width: 10%"></td>
+        {% else %}
+          <td><img src="/static/img/angry.png" style="width: 10%"></td>
+        {% endif %}
+        <td>{{ item.pm100 }}</td>
+        {% if item.pm100 <= 30 %}
+          <td><img src="/static/img/smile.png" style="width: 10%"></td>
+        {% elif item.pm100 > 30 and item.pm100 <= 80 %}
+          <td><img src="/static/img/normal.png" style="width: 10%"></td>
+        {% else %}
+          <td><img src="/static/img/angry.png" style="width: 10%"></td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}

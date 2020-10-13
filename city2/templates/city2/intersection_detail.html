@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}교차로 세부정보{% endblock %}
+
+{% block extra-style %}
+<!-- 
+    - 2020-0528 by fantasy8
+    - 1600px => 1200px로 변경 네이버 웨일 브라우저에서 이미지 화면이 회전 안되는 현상이 발생하여 조치
+-->
+<style>
+    @media (min-width: 576px) { 
+        .rotate90 {
+            transform: rotate(0deg);
+        }
+        .rotate180 {
+            transform: rotate(0deg);
+        }
+    }
+    @media (min-width: 1200px) {    
+        .rotate90 {
+            -webkit-transform: rotate(90deg);
+            -moz-transform: rotate(90deg);
+            -o-transform: rotate(90deg);
+            -ms-transform: rotate(90deg);
+            transform: rotate(90deg);
+        }
+        .rotate180 {
+            -webkit-transform: rotate(180deg);
+            -moz-transform: rotate(180deg);
+            -o-transform: rotate(180deg);
+            -ms-transform: rotate(180deg);
+            transform: rotate(180deg);
+        }
+    }
+    .city_title {
+        margin-left: 25px;
+        font-style:italic;
+        font-weight:bold;
+    }
+    .row2 {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        margin-right: -15px;
+        margin-left: 15px;
+    }
+}
+</style>
+{% endblock extra-style %}
+
+{% block content %}
+<br>
+<div class="row2">
+    <div class="col-md-4">
+        <div class="row2">
+            <a href="{{ object.image.url }}">
+                {% if object.orientation == 6 %}
+                    <img id = "myImg" class="rotate90" src="{{ object.image.url }}" style="width: 100%">
+                {% elif object.orientation == 3 %}
+                    <img id = "myImg" class="rotate180" src="{{ object.image.url }}" style="width: 100%">
+                {% else %}
+                    <img id = "myImg" src="{{ object.image.url }}" style="width: 100%">
+                {% endif %}
+            </a>
+            <br><br><br><br>
+            <a href="{{ object.image2.url }}">
+                {% if object.orientation2 == 6 %}
+                    <img id = "myImg2" class="rotate90" src="{{ object.image2.url }}" style="width: 50%">
+                {% elif object.orientation2 == 3 %}
+                    <img id = "myImg2" class="rotate180" src="{{ object.image2.url }}" style="width: 50%">
+                {% else %}
+                    <img id = "myImg2" src="{{ object.image2.url }}" style="width: 50%">
+                {% endif %}
+            </a>
+        </div>
+    </div>
+    <div>
+        <ul>
+            <li class="h5">도시명</li>
+            <p>{{ object.int_id.city_name }}</p>
+            <li class="h5">교차로명</li>
+            <p>{{ object.int_name }}</p>
+            <li class="h5">모델명</li>
+            <p>{{ object.model_name }}</p>
+            <li class="h5">제조사</li>
+            <p>{{ object.man_company }}</p>
+            <li class="h5">제조년월일</li>
+            <p>{{ object.make_date }}</p>
+            <li class="h5">보드 실장 상태</li>
+            <p>{{ object.bd_ins_kind }}</p>
+            <li class="h5">등록자</li>
+            <p>{{ object.owner.first_name }}</p>
+            <li class="h5">기타 정보</li>
+            {% if object.description %}
+                <p>{{ object.description|linebreaks }}</p>
+            {% else %}
+                <p>(blank)</p>
+            {% endif %}
+            <br />
+            <br />
+                    
+            <li class="h4">
+                <a href="{% url 'city:aslog_add' object.int_id.id object.id %}">A/S 등록</a>
+            </li>
+            <br />
+            <li class="h4">
+                <a href="{% url 'city:aslog_detail' object.int_id.id object.id %}">A/S 이력</a>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock content %}

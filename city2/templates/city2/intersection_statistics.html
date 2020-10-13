@@ -1,0 +1,477 @@
+{% extends 'base.html' %}
+
+{% block title %}교차로 정보 통계{% endblock %}
+
+{% block extra-style %}
+  <style>
+    fieldset {
+      margin: 8px;
+      border: 1px solid silver;
+      padding: 8px;    
+      border-radius: 4px;
+    }
+    .f {
+      word-spacing: 20px;
+    }
+  </style>
+  <script> 
+    // 이벤트 등록
+    window.addEventListener("load", function() {
+      var replaceTimeSection = document.getElementById("replacement-section");
+
+      // 변수들 정의
+      var queryButton = replaceTimeSection.querySelector("input[name='button']");
+      var nowDate = replaceTimeSection.querySelector("#replacement-now-date");
+      var operPeriod = replaceTimeSection.querySelector(".replacement-oper-period");
+      var cityName = replaceTimeSection.querySelector("select[name='city-name']");
+      var queryResult = replaceTimeSection.querySelector(".replacement-data");
+      nowDate.valueAsDate = new Date();
+
+      // 클릭 이벤트
+      queryButton.onclick = function() {
+        var str = "";
+        const YEAR_DAY = 365; // 1년을 일 단위로 환산
+        const DAY_MSECOND = 24 * 60 * 60 * 1000;   // 1일을 msec로 환산
+        var operPeriodValue = operPeriod.value * YEAR_DAY; 
+  
+        var selCityName = cityName.options[cityName.selectedIndex].value;
+
+        str += "<table id='replacement-table' class='table table-bordered table-sm table-hover' style='width:100%'>";
+        str += "<thead>";
+        str += "<tr class='table-primary text-center'>";
+        str += "<th>도시명</th>";
+        str += "<th>교차로명</th>";
+        str += "<th>제조사</th>";
+        str += "<th>모델명</th>";
+        str += "<th>제조일(설치일)</th>";
+        str += "</tr>";
+        str += "</thead>";
+        str += "<tbody>";
+          {% for city in object_list %}
+          if ("{{ city.city_name }}" == selCityName) {
+            {% for item in city.intersection_set.all %}
+              var baseTime = new Date(nowDate.valueAsDate);
+              var installTime = new Date("{{ item.make_date }}");
+              var dateDiff = baseTime - installTime;
+              var oneDay = DAY_MSECOND;
+              var elapsedDate = dateDiff/oneDay;
+              var thresholdDate = operPeriodValue;
+  
+              if (elapsedDate >= thresholdDate) {
+                str += "<tr class='text-right'>";
+                str += "<td class='text-center font-weight-bold'>";
+                str += "{{ item.int_id.city_name }}";
+                str += "</td>";
+                str += "<td class='text-center'>";
+                str += "{{ item.int_name }}";
+                str += "</td>";
+                str += "<td class='text-center'>";
+                str += "{{ item.man_company }}";
+                str += "</td>";
+                str += "<td class='text-center'>";
+                str += "{{ item.model_name }}";
+                str += "</td>";
+                str += "<td>";
+                str += "{{ item.make_date }}";
+                str += "</td>";
+                str += "</tr>";
+              }
+            {% endfor %}
+          }
+        {% endfor %}
+        str += "</tbody>";
+        str += "</table>";
+        queryResult.innerHTML = str;
+
+        document.title = selCityName + " 교체 시기 제어기 목록"; 
+
+        // 데이터 테이블 처리 설정
+        // innerHTML 형태의 동적 처리로 인해 innerHTML 뒤에서 사용
+        var table = $('#replacement-table').DataTable( 
+          {
+            'dom' : "<'row'<'col-sm-12 col-md-6'Bl><'col-sm-12 col-md-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "pageLength": 25,
+            buttons: ['excel', 'pdf', 'print', 'colvis'],
+          }
+        );
+        table.buttons().container().appendTo('#reminders_wrapper .col-md-6:eq(0)');
+      }
+    });
+  </script>
+{% endblock extra-style %}
+
+{% block content %}
+<br />
+<ul class="nav nav-tabs">
+  <li class="nav-item">
+    <a class="nav-link active" data-toggle="tab" href="#city_install_cnt">도시별 설치 개수</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-toggle="tab" href="#city_occ_status">도시별 점유율 현황</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-toggle="tab" href="#change_date_check">교체 시기 확인</a>
+  </li>
+</ul>
+
+<div class="tab-content">
+  <!-- 도시별 제조사 교통신호제어기 설치 개수 표 형태로 표출(탭 윈도우)-->
+  <script>
+    company = ["서돌전자통신", "코스텍", "세인시스템", "한국전기교통",
+        "진우전자", "한진이엔씨", "한길에이치씨", "엘티시스템(LTS)", 
+        "엘케이일레븐", "진우산전", "에스에이텍", "삼성SDS",];
+  </script>
+  <div class="tab-pane fade show active" id="city_install_cnt">
+    <table id="city-stat" class="table table-bordered table-sm table-hover">
+      <thead>
+        <tr class="table-info text-center">
+          <th>도시명</th>
+          <th>총 개수</th>
+          <th>서돌전자통신</th>
+          <th>코스텍</th>
+          <th>세인시스템</th>
+          <th>한국전기교통</th>
+          <th>진우전자</th>
+          <th>한진이엔씨</th>
+          <th>한길에이치씨</th>
+          <th>엘티시스템(LTS)</th>
+          <th>엘케이일레븐</th>
+          <th>진우산전</th>
+          <th>에스에이텍</th>
+          <th>삼성SDS</th>
+          <th>기타</th>
+        </tr>
+      </thead>
+      <tbody id="city_install_count">
+      </tbody>
+    </table>
+    <script>
+      $(document).ready(() => {
+        var str = "";
+        // 도시 단위로 제조사별 설치 개수 수집 및 표출
+        var installCountByCity = function(city_name, total_flag) 
+        {
+          const COMPANY = 14;
+          var total_count = 0;
+          var installCount = [];
+
+          for (var i = 0; i < COMPANY; i++) {
+            installCount[i] = 0;
+          }
+
+          if (total_flag) {
+            city_name = "한국(전국)";
+            {% for city in object_list %}
+              {% for item in city.intersection_set.all %}
+                if ("{{ item.man_company }}" == company[0])
+                  installCount[1] += 1;
+                else if ("{{ item.man_company }}" == company[1])
+                  installCount[2] += 1;
+                else if ("{{ item.man_company }}" == company[2])
+                  installCount[3] += 1;
+                else if ("{{ item.man_company }}" == company[3])
+                  installCount[4] += 1;
+                else if ("{{ item.man_company }}" == company[4])
+                  installCount[5] += 1;
+                else if ("{{ item.man_company }}" == company[5])
+                  installCount[6] += 1;
+                else if ("{{ item.man_company }}" == company[6])
+                  installCount[7] += 1;
+                else if ("{{ item.man_company }}" == company[7])
+                  installCount[8] += 1;
+                else if ("{{ item.man_company }}" == company[8])
+                  installCount[9] += 1;
+                else if ("{{ item.man_company }}" == company[9])
+                  installCount[10] += 1;
+                else if ("{{ item.man_company }}" == company[10])
+                  installCount[11] += 1;
+                else if ("{{ item.man_company }}" == company[11])
+                  installCount[12] += 1;
+                else
+                  installCount[13] += 1;
+              {% endfor %}
+            {% endfor %}
+          }
+          else {
+            {% for city in object_list %}
+              {% for item in city.intersection_set.all %}
+                if ("{{ item.int_id.city_name }}" == city_name) {
+                  if ("{{ item.man_company }}" == company[0])
+                    installCount[1] += 1;
+                  else if ("{{ item.man_company }}" == company[1])
+                    installCount[2] += 1;
+                  else if ("{{ item.man_company }}" == company[2])
+                    installCount[3] += 1;
+                  else if ("{{ item.man_company }}" == company[3])
+                    installCount[4] += 1;
+                  else if ("{{ item.man_company }}" == company[4])
+                    installCount[5] += 1;
+                  else if ("{{ item.man_company }}" == company[5])
+                    installCount[6] += 1;
+                  else if ("{{ item.man_company }}" == company[6])
+                    installCount[7] += 1;
+                  else if ("{{ item.man_company }}" == company[7])
+                    installCount[8] += 1;
+                  else if ("{{ item.man_company }}" == company[8])
+                    installCount[9] += 1;
+                  else if ("{{ item.man_company }}" == company[9])
+                    installCount[10] += 1;
+                  else if ("{{ item.man_company }}" == company[10])
+                    installCount[11] += 1;
+                  else if ("{{ item.man_company }}" == company[11])
+                    installCount[12] += 1;
+                  else
+                    installCount[13] += 1;
+                }
+              {% endfor %}
+            {% endfor %}
+          }
+
+          for (var i = 1; i < COMPANY; i++) 
+            total_count += installCount[i];
+          installCount[0] = total_count;
+
+          if (!installCount[0]) return;
+
+          str += "<table>";
+          str += "<tr class='text-right'>";
+          str += "<td class='text-center bg-info font-weight-bold'>";
+          str += city_name;
+          str += "</td>";
+          for (var i = 0; i < installCount.length; i++) {
+            if (i == 0) 
+              str += "<td class='bg-light'>";
+            else 
+                str += "<td>";
+            str += String(installCount[i]);
+            str += "(";
+            str += String(((installCount[i]/installCount[0]) * 100).toFixed(2));
+            str += "%)";
+            str += "</td>";
+          }
+          str += "</tr>";
+          str += "</table>";
+
+          document.getElementById("city_install_count").innerHTML = str;
+        }
+          
+        {% for city in object_list %}
+          installCountByCity("{{city.city_name}}", 0);
+        {% endfor %}
+        installCountByCity("한국(전국)", 1);
+
+        document.title = "도시별 교통신호제어기 설치 개수 및 점유율"; 
+        var table = $('#city-stat').DataTable( 
+          {
+            'dom' : "<'row'<'col-sm-12 col-md-6'Bl><'col-sm-12 col-md-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "pageLength": 25,
+            buttons: ['excel', 'print', 'colvis'],
+          }
+        );
+        table.buttons().container().appendTo('#reminders_wrapper .col-md-6:eq(0)');
+      });
+    </script>
+  </div>
+
+  <!-- 도시별 제조사 교통신호제어기 설치 개수 차트 그래프 출력(탭 윈도우) -->
+  <script>
+    chartCtx = [];
+    function changeBg(color) {
+      for (var i = 0; i < GRAPH_COMPANY; i++) {
+        chartCtx[i].destroy();
+      }
+      
+      chartCtx[0]  = displayChart(color, "seoulChart", "서울시", "서돌전자통신", "진우산전", "코스텍", "한국전기교통", "세인시스템", "위훈용사복지회");
+      chartCtx[1]  = displayChart(color, "suncheonChart", "순천시", "서돌전자통신", "명신엔지니어링", "한국전기교통", "진우전자", "세인시스템", "옵토피아");
+      chartCtx[2]  = displayChart(color, "yangsanChart", "양산시", "서돌전자통신", "세인시스템", "한국전기교통", "코스텍", "(주)신호", "양광");
+      chartCtx[3]  = displayChart(color, "yeosuChart", "여수시", "서돌전자통신", "세인시스템", "코스텍", "한길에이치씨", "명신엔지니어링", "진우전자");
+      chartCtx[4]  = displayChart(color, "suwonChart", "수원시", "진우전자", "에스에이텍", "한진이엔씨", "삼성SDS", "샤이니테크", "코스텍");
+      chartCtx[5]  = displayChart(color, "gunsanChart", "군산시", "서돌전자통신", "대한신호", "코스텍", "진우전자", "세인시스템", "(주)신호");
+      chartCtx[6]  = displayChart(color, "incheonChart", "인천광역시", "서돌전자통신", "엘티시스템(LTS)", "영인글로벌", "세인시스템", "진우산전", "양광");
+      chartCtx[7]  = displayChart(color, "gwangjuChart", "광주광역시", "서돌전자통신", "한국전기교통", "세인시스템", "코스텍", "모루시스템", "엘케이일레븐");
+      chartCtx[8]  = displayChart(color, "changwonChart", "창원시", "서돌전자통신", "대한신호", "코스텍", "세인시스템", "옵토피아", "엘티시스템(LTS)");
+      chartCtx[9]  = displayChart(color, "jejuChart", "제주특별자치도", "서돌전자통신", "한국전기교통", "세인시스템", "코스텍", "엘티시스템(LTS)", "비젼21이앤씨");
+      chartCtx[10] = displayChart(color, "hanamChart", "하남시", "서돌전자통신", "코스텍", "세인시스템", "한국전기교통", "엘티시스템(LTS)", "진우산전");
+    }
+  </script>
+
+  <div class="tab-pane fade" id="city_occ_status">
+    <input type = "radio" name="chartType" value = "pie" onclick="changeBg(this.value)" checked='checked' >파이&emsp;&emsp;&emsp;
+    <input type = "radio" name="chartType" value = "doughnut" onclick="changeBg(this.value)" >도우넛&emsp;&emsp;&emsp;
+    <input type = "radio" name="chartType" value = "bar" onclick="changeBg(this.value)" >수직바&emsp;&emsp;&emsp;
+    <input type = "radio" name="chartType" value = "horizontalBar" onclick="changeBg(this.value)" >수평바&emsp;&emsp;&emsp;
+    <input type = "radio" name="chartType" value = "radar" onclick="changeBg(this.value)" >레이더&emsp;&emsp;&emsp;
+    <input type = "radio" name="chartType" value = "line" onclick="changeBg(this.value)" >라인
+    <hr />
+
+    <!-- 4개 단위로 도형 디스플레이 : flex 옵션 -->
+    <div style="width:400px; display: flex;">
+      <canvas id="seoulChart"></canvas>
+      <canvas id="suncheonChart"></canvas>
+      <canvas id="yangsanChart"></canvas>
+      <canvas id="yeosuChart"></canvas>
+    </div>
+    <hr>
+    <div style="width:400px; display: flex;">
+      <canvas id="suwonChart"></canvas>
+      <canvas id="gunsanChart"></canvas>
+      <canvas id="incheonChart"></canvas>
+      <canvas id="gwangjuChart"></canvas>
+    </div>
+    <hr>
+    <div style="width:400px; display: flex;">
+      <canvas id="changwonChart"></canvas>
+      <canvas id="jejuChart"></canvas>
+      <canvas id="hanamChart"></canvas>
+    </div>
+  
+    <script>
+      var displayChart = function () {
+        GRAPH_COMPANY = 11;
+        var ctx = document.getElementById(arguments[1]).getContext('2d');
+        var installCount = [];
+        var total_count = 0;
+
+        for (var i = 0; i < GRAPH_COMPANY; i++) {
+          installCount[i] = 0;
+        }
+
+        // 입력된 도시에 대한 설치 개수 추출
+        {% for city in object_list %}
+          {% for item in city.intersection_set.all %}
+            if ("{{ item.int_id.city_name }}" == arguments[2]) {
+              if ("{{ item.man_company }}" == arguments[3])
+                installCount[0] += 1;
+              else if ("{{ item.man_company }}" == arguments[4])
+                installCount[1] += 1;
+              else if ("{{ item.man_company }}" == arguments[5])
+                installCount[2] += 1;
+              else if ("{{ item.man_company }}" == arguments[6])
+                installCount[3] += 1;
+              else if ("{{ item.man_company }}" == arguments[7])
+                installCount[4] += 1;
+              else if ("{{ item.man_company }}" == arguments[8])
+                installCount[5] += 1;
+              else
+                installCount[6] += 1;
+            }
+          {% endfor %}
+        {% endfor %}
+
+        for (var i = 0; i < GRAPH_COMPANY; i++) 
+          total_count += installCount[i];
+
+        /*
+          - Chart를 생성하면서, 
+          - ctx를 첫번째 argument로 넘겨주고, 
+          - 두번째 argument로 그림을 그릴때 필요한 요소들을 모두 넘겨줍니다. 
+        */
+        myData = {
+          labels: [arguments[3], arguments[4], arguments[5], arguments[6], arguments[7], arguments[8], "기타"],
+          datasets: [{
+              label: '교통신호제어기 설치 현황',
+              data: [installCount[0], installCount[1], installCount[2], 
+                    installCount[3], installCount[4], installCount[5], installCount[6]],
+              backgroundColor: [
+                  'rgba(255, 99, 132, 0.2)',
+                  'rgba(54, 162, 235, 0.2)',
+                  'rgba(255, 206, 86, 0.2)',
+                  'rgba(75, 192, 192, 0.2)',
+                  'rgba(153, 102, 255, 0.2)',
+                  'rgba(255, 159, 64, 0.2)',
+                  'rgba(60, 172, 36, 0.2)'
+              ],
+              borderColor: [
+                  'rgba(255,99,132,1)',
+                  'rgba(54, 162, 235, 1)',
+                  'rgba(255, 206, 86, 1)',
+                  'rgba(75, 192, 192, 1)',
+                  'rgba(153, 102, 255, 1)',
+                  'rgba(255, 159, 64, 1)',
+                  'rgba(60, 172, 36, 1)'
+              ],
+              borderWidth: 2
+          }]
+        };
+
+        var myChart = new Chart(ctx, {
+          type: arguments[0],
+          data: myData,
+          options: {
+              maintainAspectRatio: true, // default value. false일 경우 포함된 div의 크기에 맞춰서 그려짐.
+              title: {
+                display: true,
+                text: arguments[2] + ' 설치 현황' + ' (' + total_count +')',
+                fontSize: 20,
+              }
+          }
+        });
+
+        return myChart;
+      }
+
+      // 4개 도시 단위로 스크롤바 및 수평 구분선 이용하여 표출
+      chartCtx[0]  = displayChart("pie", "seoulChart", "서울시", "서돌전자통신", "진우산전", "코스텍", "한국전기교통", "세인시스템", "위훈용사복지회");
+      chartCtx[1]  = displayChart("pie", "suncheonChart", "순천시", "서돌전자통신", "명신엔지니어링", "한국전기교통", "진우전자", "세인시스템", "옵토피아");
+      chartCtx[2]  = displayChart("pie", "yangsanChart", "양산시", "서돌전자통신", "세인시스템", "한국전기교통", "코스텍", "(주)신호", "양광");
+      chartCtx[3]  = displayChart("pie", "yeosuChart", "여수시", "서돌전자통신", "세인시스템", "코스텍", "한길에이치씨", "명신엔지니어링", "진우전자");
+      
+      chartCtx[4]  = displayChart("pie", "suwonChart", "수원시", "진우전자", "에스에이텍", "한진이엔씨", "삼성SDS", "샤이니테크", "코스텍");
+      chartCtx[5]  = displayChart("pie", "gunsanChart", "군산시", "서돌전자통신", "대한신호", "코스텍", "진우전자", "세인시스템", "(주)신호");
+      chartCtx[6]  = displayChart("pie", "incheonChart", "인천광역시", "서돌전자통신", "엘티시스템(LTS)", "영인글로벌", "세인시스템", "진우산전", "양광");
+      chartCtx[7]  = displayChart("pie", "gwangjuChart", "광주광역시", "서돌전자통신", "한국전기교통", "세인시스템", "코스텍", "모루시스템", "엘케이일레븐");
+
+      chartCtx[8]  = displayChart("pie", "changwonChart", "창원시", "서돌전자통신", "대한신호", "코스텍", "세인시스템", "옵토피아", "엘티시스템(LTS)");
+      chartCtx[9]  = displayChart("pie", "jejuChart", "제주특별자치도", "서돌전자통신", "한국전기교통", "세인시스템", "코스텍", "엘티시스템(LTS)", "비젼21이앤씨");
+      chartCtx[10] = displayChart("pie", "hanamChart", "하남시", "서돌전자통신", "코스텍", "세인시스템", "한국전기교통", "엘티시스템(LTS)", "진우산전");
+    </script>
+  </div>
+
+  <!-- 도시별 일정 년한 지난 제어기 개수 정보 표출(탭 윈도우) -->
+  <div class="tab-pane fade" id="change_date_check">
+    <!-- 아래의 위치정보 취득 코드는 HTTPS를 통해서만 가능함 -->
+    <!-- 
+    <script>
+      function getLocation() {
+        if (navigator.geolocation) { // GPS를 지원하면
+          navigator.geolocation.getCurrentPosition(function(position) {
+            alert(position.coords.latitude + ' ' + position.coords.longitude);
+          }, function(error) {
+            console.error(error);
+          }, {
+            enableHighAccuracy: false,
+            maximumAge: 0,
+            timeout: Infinity
+          });
+        } else {
+          alert('GPS를 지원하지 않습니다');
+        }
+      }
+    getLocation();
+    </script>
+    -->
+
+    <section id="replacement-section"> 
+      <fieldset style="width:150">
+          <span><label for="">도시명</label></span>
+          <select name="city-name">
+            {% for city in object_list %}
+              <option value={{ city.city_name }}>{{ city.city_name }}</option>
+            {% endfor %}
+          </select>
+          <span><label for="" >&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;운영 기간</label></span>
+          <input type="number" class="replacement-oper-period" value="10" style="text-align:right; width:40px;" maxlength="2" />
+          <span><label>년 이상 경과</label></span>
+          <span><label for="" >&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;기준 날짜</label></span>
+          <input type="date" name="bday" id="replacement-now-date" />
+          <input name="button" type="button" value="조회" style="width:120px; float:right; 
+                    background-color:rgb(51, 176, 185);border: 2px solid rgb(51, 176, 185);" />
+        
+      </fieldset>
+      <div class="replacement-data">
+      </div>
+    </section>
+  </div>
+</div>
+
+{% endblock content %}

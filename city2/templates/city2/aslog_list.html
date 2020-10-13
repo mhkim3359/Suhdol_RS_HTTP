@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}A/S 이력{% endblock %}
+
+{% block extra-style %}
+<style>
+    td { white-space:pre }
+</style>
+{% endblock extra-style %}
+
+{% block content %}
+<br />
+<script>
+    $(document).ready(function() {
+        $('#example').DataTable(
+            {
+              'dom' : "<'row'<'col-sm-12 col-md-6'Bl><'col-sm-12 col-md-6'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+              "pageLength": 50,
+              pagingType : "full_numbers",
+              buttons: ['excel', 'pdf', 'print', 'colvis'],
+            }
+        );
+    } );
+</script>
+<table id="example" class="table table-bordered table-sm table-hover">
+    <thead>
+        <tr class="table-info">
+            <th>도시명</th>
+            <th>교차로명</th>
+            <th>증상</th>
+            <th>신고자</th>
+            <th>작업일</th>
+            <th>작업자</th>
+            <th>조치</th>
+            <th>세부 정보</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for item in object_list %}
+        <tr>
+            <td>{{ item.city_no }}</td>
+            <td>{{ item.int_no }}</td>
+            <td>{{ item.title }}</td>
+            <td>{{ item.reporter }}</td>
+            <td>{{ item.as_date }}</td>
+            <td>{{ item.as_worker }}</td>
+            <td>{{ item.description }}</td>
+            <td>{{ item.detail_info }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock content %}

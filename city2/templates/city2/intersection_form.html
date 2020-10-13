@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}교차로 정보 등록{% endblock %}
+
+{% block extra-style %}
+<style>
+    .input-file {display:none;}
+    .img-photo {width:30%}
+    .btn2 {display:block; width:100px; padding:10px 0; text-align:center;}
+</style>
+{% endblock %}
+
+{% block content %}
+    <br />
+    <h2>교차로 정보 생성 및 수정</h2>    
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <div class="font-weight-bold">Wrong Please correct the error(s) below.</div>
+            {{ form.errors }}
+        </div>
+    {% endif %}
+
+    {% if form.is_multipart %}
+        <form enctype="multipart/form-data" method="post" class="card pt-3">
+    {% else %}
+        <form action="" method="post" class="card pt-3">
+    {% endif %}
+    {% csrf_token %}
+        <script>
+            $(document).ready(function() {
+                function readURL(input) {
+                    //console.log(input);
+                    //console.log(input.files[0]);
+                    if (input.files && input.files[0]) {
+                        var reader = new FileReader(); //파일을 읽기 위한 FileReader객체 생성
+                        reader.onload = function (e) { 
+                            //파일 읽어들이기를 성공했을때 호출되는 이벤트 핸들러
+                            $('#productImage').attr('src', e.target.result);
+                            $('#productImage').css({display:"block"});
+                            //이미지 Tag의 SRC속성에 읽어들인 File내용을 지정
+                        }                    
+                        reader.readAsDataURL(input.files[0]);
+                        EXIF.getData(input.files[0], function() {
+                            var exifLong = EXIF.getTag(this, "GPSLongitude");
+                            var exifLat = EXIF.getTag(this, "GPSLatitude");
+                            var exifLongRef = EXIF.getTag(this, "GPSLongitudeRef");
+                            var exifLatRef = EXIF.getTag(this, "GPSLatitudeRef");
+            
+                            // Orientation 정보는 추후 DB에 저장해서 "6"인 경우 CW로 회전하여 사용해야 함
+                            var orientation = EXIF.getTag(this, "Orientation");
+                            //console.log(exifLong, exifLat, exifLongRef, exifLatRef)
+
+                            if (exifLatRef == "S") {
+                                var latitude = (exifLat[0]*-1) + (( (exifLat[1]*-60) + (exifLat[2]*-1) ) / 3600);						
+                            } else {
+                                var latitude = exifLat[0] + (( (exifLat[1]*60) + exifLat[2] ) / 3600);
+                            }
+
+                            if (exifLongRef == "W") {
+                                var longitude = (exifLong[0]*-1) + (( (exifLong[1]*-60) + (exifLong[2]*-1) ) / 3600);						
+                            } else {
+                                var longitude = exifLong[0] + (( (exifLong[1]*60) + exifLong[2] ) / 3600);
+                            }
+
+                            //console.log(latitude, longitude);
+
+                            $("#latitude").val(latitude);
+                            $("#longitude").val(longitude);
+                            $("#orientation").val(orientation);
+                        });
+                        //File내용을 읽어 dataURL형식의 문자열로 저장
+                    }
+                }//readURL()--
+
+                // 2020-06-08 by fantasy8
+                // 2개의 함수를 1개로 사용하는 방법은 Javascript와 jQuery를 더 배워서..
+                function readURL2(input) {
+                    //console.log(input);
+                    //console.log(input.files[0]);
+                    if (input.files && input.files[0]) {
+                        var reader = new FileReader(); //파일을 읽기 위한 FileReader객체 생성
+                        reader.onload = function (e) { 
+                            //파일 읽어들이기를 성공했을때 호출되는 이벤트 핸들러
+                            $('#productImage2').attr('src', e.target.result);
+                            $('#productImage2').css({display:"block"});
+                            //이미지 Tag의 SRC속성에 읽어들인 File내용을 지정
+                        }                    
+                        reader.readAsDataURL(input.files[0]);
+                        EXIF.getData(input.files[0], function() {
+                            var exifLong = EXIF.getTag(this, "GPSLongitude");
+                            var exifLat = EXIF.getTag(this, "GPSLatitude");
+                            var exifLongRef = EXIF.getTag(this, "GPSLongitudeRef");
+                            var exifLatRef = EXIF.getTag(this, "GPSLatitudeRef");
+            
+                            // Orientation 정보는 추후 DB에 저장해서 "6"인 경우 CW로 회전하여 사용해야 함
+                            var orientation = EXIF.getTag(this, "Orientation");
+                            //console.log(exifLong, exifLat, exifLongRef, exifLatRef)
+
+                            if (exifLatRef == "S") {
+                                var latitude = (exifLat[0]*-1) + (( (exifLat[1]*-60) + (exifLat[2]*-1) ) / 3600);						
+                            } else {
+                                var latitude = exifLat[0] + (( (exifLat[1]*60) + exifLat[2] ) / 3600);
+                            }
+
+                            if (exifLongRef == "W") {
+                                var longitude = (exifLong[0]*-1) + (( (exifLong[1]*-60) + (exifLong[2]*-1) ) / 3600);						
+                            } else {
+                                var longitude = exifLong[0] + (( (exifLong[1]*60) + exifLong[2] ) / 3600);
+                            }
+
+                            //console.log(latitude, longitude);
+
+                            $("#latitude2").val(latitude);
+                            $("#longitude2").val(longitude);
+                            $("#orientation2").val(orientation);
+                        });
+                        //File내용을 읽어 dataURL형식의 문자열로 저장
+                    }
+                }//readURL()--
+    
+                //file 양식으로 이미지를 선택(값이 변경) 되었을때 처리하는 코드
+                $("#productImage").change(function(){
+                    //alert(this.value); //선택한 이미지 경로 표시
+                    readURL(this);
+                });
+
+                $("#productImage2").change(function(){
+                    readURL2(this);
+                });
+            });
+        </script>
+
+        <div class="form-group row">    
+            <span class="col-form-label col-sm-2 ml-3 font-weight-bold"> 도시명</span>
+            <div class="col-sm-2">
+                {{ form.int_id|add_class:"form-control" }}
+            </div>
+            <div class="col-sm-2 my-auto">
+                <a href="{% url 'city:city_add' %}" class="btn btn-outline-primary btn-sm">도시 정보 추가</a>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            {{ form.int_name|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <div class="col-sm-4">
+                {{ form.int_name|add_class:"form-control"|attr:"autofocus:true" }}
+            </div>
+        </div>
+        <div class="form-group row">
+            {{ form.product_type|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <div class="col-sm-4">
+                {{ form.product_type|add_class:"form-control"}}
+            </div>
+        </div>
+        <div class="form-group row">
+            {{ form.model_name|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <div class="col-sm-4">
+                {{ form.model_name|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="form-group row">
+            {{ form.man_company|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <div class="col-sm-4">
+                {{ form.man_company|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="form-group row">
+            {{ form.make_date|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <div class="col-sm-4">
+                {{ form.make_date|add_class:"form-control"|attr:"type:date"}}
+            </div>
+        </div>
+        <div class="form-group row">
+            {{ form.cpu_version|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <div class="col-sm-4">
+                {{ form.cpu_version|add_class:"form-control"|attr:"value:0" }}
+            </div>
+        </div>
+        <div class="form-group row">
+            {{ form.cpu_bd_kind|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <div class="col-sm-4">
+                {{ form.cpu_bd_kind|add_class:"form-control" }}
+            </div>
+        </div>
+        <div class="form-group row">
+            {{ form.case_status|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <div class="col-sm-4">
+                {{ form.case_status|add_class:"form-control"|attr:"value:0" }}
+            </div>
+        </div>
+        <div class="form-group row">
+            {{ form.bd_ins_kind|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <div class="col-sm-4">
+                {{ form.bd_ins_kind|add_class:"form-control"|attr:"value:0" }}
+            </div>
+        </div>
+        <div class="form-group row">
+            {{ form.latitude|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <span class="col-sm-2">
+                {{ form.latitude|add_class:"form-control"|attr:"value:0"|attr:"id=latitude" }}
+            </span>
+            <span class="col-sm-2">
+                {{ form.latitude2|add_class:"form-control"|attr:"value:0"|attr:"id=latitude2" }}
+            </span>
+        </div>
+        <div class="form-group row">
+            {{ form.longitude|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <span class="col-sm-2">
+                {{ form.longitude|add_class:"form-control"|attr:"value:0"|attr:"id=longitude" }}
+            </span>
+            <span class="col-sm-2">
+                {{ form.longitude2|add_class:"form-control"|attr:"value:0"|attr:"id=longitude2" }}
+            </span>
+        </div>
+        <div class="form-group row">
+            {{ form.orientation|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <span class="col-sm-2">
+                {{ form.orientation|add_class:"form-control"|attr:"id=orientation" }}
+            </span>
+            <span class="col-sm-2">
+                {{ form.orientation2|add_class:"form-control"|attr:"id=orientation2" }}
+            </span>
+        </div>
+        <div class="form-group row">
+            {{ form.description|add_label_class:"col-form-label col-sm-2 ml-3 font-weight-bold" }}
+            <div class="col-sm-4">
+                {{ form.description|add_class:"form-control"|attr:"rows:2"}}
+            </div>
+        </div>
+        <div class="form-group row">
+            <span class="col-form-label col-sm-2 ml-3 font-weight-bold"> 현장 사진</span>
+            <span class="col-sm-2">
+                {{ form.image|add_class:"form-control-file"|attr:"id=productImage"}}
+            </span>
+            <span class="col-sm-2">
+                {{ form.image2|add_class:"form-control-file"|attr:"id=productImage2"}}
+            </span>
+        </div>
+        
+        <div class="form-group">
+            <div class="offset-sm-2 col-sm-5">
+                <input type="submit" value="등록" class="btn btn-info" />
+            </div>
+        </div>
+    </form>
+
+{% endblock content %}

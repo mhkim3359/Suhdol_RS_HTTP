@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}A/S 이력{% endblock %}
+
+{% block extra-style %}
+<style>
+    td {
+        white-space:pre-wrap; word-wrap:break-word;
+        white-space:pre-line
+        }
+</style>
+{% endblock extra-style %}
+
+{% block content %}
+<br />
+<h3 id="title">A/S 이력 정보</h3>
+<table class="table table-bordered table-condensed table-striped">
+    <thead>
+        <tr class="table-info">
+            <th>증상</th>
+            <th>신고자</th>
+            <th>조치</th>
+            <th>세부 정보</th>
+            <th>작업일</th>
+            <th>작업자</th>
+        </tr>
+    </thead>
+    <tbody id="aslog">
+    </tbody>
+</table>
+<script>
+    $(document).ready(() => {
+        var tmp_str = window.location.href;
+        var arr = tmp_str.split('/')
+        var str = "";
+        var title_str = "";
+        var str_n = "";
+        var int_no_save;
+        var row_count = 0;
+
+        if (arr[arr.length - 4] == "detail")
+            int_no_save = arr[arr.length - 2];
+
+        {% for item in object_list %}
+            if ({{ item.int_no.id }} == int_no_save) 
+            {
+                // 2020-05-22 by fantasy8
+                // 타이틀에 도시명, 교차로명 표출되도록 처리
+                if (row_count == 0) 
+                {
+                    title_str += "<h3>";
+                    title_str += "A/S 이력 정보 - ";
+                    title_str += "{{ item.city_no.city_name }}";
+                    title_str += "(";
+                    title_str += "{{ item.int_no.int_name }}";
+                    title_str += ")";
+                    title_str += "</h3>";
+                    document.getElementById("title").innerHTML = title_str;
+                    // console.log(row_count);
+                    // console.log("{{ item.city_no.city_name }}");
+                }
+                str += "<table>";
+                str += "<tr>";
+                str += "<td>";
+                str += "{{ item.title }}";
+                str += "</td>";
+                str += "<td>";
+                str += "{{ item.reporter }}";
+                str += "</td>";
+                str += "<td>";
+                str += "{{ item.description }}";
+                str += "</td>";
+                str += "<td>";
+                str += "<div>";
+                str += "{{ item.detail_info|linebreaksbr }}";
+                str += "</div>";
+                str += "</td>";
+                str += "<td>";
+                str += "{{ item.as_date }}";
+                str += "</td>";
+                str += "<td>";
+                str += "{{ item.as_worker }}";
+                str += "</td>";
+                str += "</tr>";
+                str += "</table>";
+
+                document.getElementById("aslog").innerHTML = str;
+                row_count++;
+            }
+        {% endfor %}
+    });
+</script>
+
+{% endblock content %}

@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}제품 설치 관리 프로그램{% endblock %}
+
+{% block extra-style %}
+<style>
+    .powered {
+        position: relative;
+        top: 77%;
+        color: #cc0;
+        font-style: italic;
+    }
+
+    #map {
+        border-top: 10px solid #ccc;
+        border-bottom: 10px solid #ccc;
+        padding-bottom: 62%;
+    }
+    
+</style>
+{% endblock %}
+
+{% block content %}
+
+    <div id="map" style="width:100%;height:100%;"></div>
+    <br>
+    <h4 class="powered"><i class="fas fa-arrow-circle-right" ></i>서돌전자통신 제품 설치 위치</h4>
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=d12c1e36e9c25387e2fd23c47618fa40"></script>
+    <script>
+        var container = document.getElementById('map');
+        var mapOptions = { 
+            center: new kakao.maps.LatLng(35.96294722222222, 126.75022777777778), 
+            level: 7
+        }; 
+    
+        var map = new kakao.maps.Map(container, mapOptions); 
+
+        {% for item in object_list %}
+            // 영상검지기 정보 표출
+            if ("{{ item.product_type }}" == "영상검지기") {
+                var marker = new kakao.maps.Marker({
+                    position: new kakao.maps.LatLng({{ item.latitude }}, {{ item.longitude }}),
+                    clickable: true,
+                    map: map,
+                    title: '{{ item.int_name }}({{ item.model_name }})',
+                    int_id: '{{ item.id }}',
+                    icon: {
+                        url: "{% static 'img/cam_marker_1.png' %}",
+                        size: new kakao.maps.Size(32, 32),
+                        origin: new kakao.maps.Point(0, 0),
+                        anchor: new kakao.maps.Point(16, 16)
+                    },
+                });
+                var position = new kakao.maps.LatLng({{ item.latitude }}, {{ item.longitude }});
+                var content = '<div class="customoverlay">' +
+                            '  <a href="city2/intersection/{{ item.id }}">' +
+                            '    <span class="title">구의야구공원</span>' +
+                            '  </a>' +
+                            '</div>';
+            }
+            else if ("{{ item.product_type }}" == "보행자작동신호기") {
+                var marker = new kakao.maps.Marker({
+                    position: new kakao.maps.LatLng({{ item.latitude }}, {{ item.longitude }}),
+                    clickable: true,
+                    map: map,
+                    title: '{{ item.int_name }}({{ item.model_name }})',
+                    int_id: '{{ item.id }}',
+                    icon: {
+                        url: "{% static 'img/pushbutton.png' %}",
+                        size: new kakao.maps.Size(32, 32),
+                        origin: new kakao.maps.Point(0, 0),
+                        anchor: new kakao.maps.Point(16, 16)
+                    },
+                });
+            }
+            else {
+                if ({{ item.int_id_id }} == 2) {
+                    var marker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng({{ item.latitude }}, {{ item.longitude }}),
+                        clickable: true,
+                        map: map,
+                        title: '{{ item.int_name }}({{ item.model_name }})',
+                        int_id: '{{ item.id }}',
+                        icon: {
+                            url: "{% static 'img/marker_3.png' %}",
+                            size: new kakao.maps.Size(32, 32),
+                            origin: new kakao.maps.Point(0, 0),
+                            anchor: new kakao.maps.Point(16, 16)
+                        },
+                    });
+                }
+                else if ({{ item.int_id_id }} == 8) {       // 군산시
+                    if ("{{ item.man_company }}" == "세인시스템") {
+                        var marker = new kakao.maps.Marker({
+                            position: new kakao.maps.LatLng({{ item.latitude }}, {{ item.longitude }}),
+                            clickable: true,
+                            map: map,
+                            title: '{{ item.int_name }}({{ item.model_name }})',
+                            int_id: '{{ item.id }}',
+                            icon: {
+                                url: "{% static 'img/marker_5.png' %}",
+                                size: new kakao.maps.Size(32, 32),
+                                origin: new kakao.maps.Point(0, 0),
+                                anchor: new kakao.maps.Point(16, 16)
+                            },
+                        });
+                    }
+                    else if ("{{ item.man_company }}" == "진우전자") {
+                        var marker = new kakao.maps.Marker({
+                            position: new kakao.maps.LatLng({{ item.latitude }}, {{ item.longitude }}),
+                            clickable: true,
+                            map: map,
+                            title: '{{ item.int_name }}({{ item.model_name }})',
+                            int_id: '{{ item.id }}',
+                            icon: {
+                                url: "{% static 'img/marker_3.png' %}",
+                                size: new kakao.maps.Size(32, 32),
+                                origin: new kakao.maps.Point(0, 0),
+                                anchor: new kakao.maps.Point(16, 16)
+                            },
+                        });
+                    }
+                    else {
+                        var marker = new kakao.maps.Marker({
+                            position: new kakao.maps.LatLng({{ item.latitude }}, {{ item.longitude }}),
+                            clickable: true,
+                            map: map,
+                            title: '{{ item.int_name }}({{ item.model_name }})',
+                            int_id: '{{ item.id }}',
+                            icon: {
+                                url: "{% static 'img/marker_4.png' %}",
+                                size: new kakao.maps.Size(32, 32),
+                                origin: new kakao.maps.Point(0, 0),
+                                anchor: new kakao.maps.Point(16, 16)
+                            },
+                        });
+                    }
+                }
+                else {
+                    var marker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng({{ item.latitude }}, {{ item.longitude }}),
+                        clickable: true,
+                        map: map,
+                        title: '{{ item.int_name }}({{ item.model_name }})',
+                        int_id: '{{ item.id }}',
+                        icon: {
+                            url: "{% static 'img/traffic.png' %}",
+                            size: new kakao.maps.Size(32, 32),
+                            origin: new kakao.maps.Point(0, 0),
+                            anchor: new kakao.maps.Point(16, 16)
+                        },
+                    });
+                }
+            }
+
+            kakao.maps.event.addListener(marker, 'click', function(mouseEvent) {
+                var customOverlay = new kakao.maps.CustomOverlay({
+                    map: map,
+                    position: position,
+                    content: content,
+                    yAnchor: 1 
+                });
+                //url = 'city2/intersection/'+ e.overlay.int_id;
+                //console.log(url);
+                //window.open(url);               // 새창열기
+                //window.location.href = url;   // 기존창 Redirection
+            });
+        {% endfor %}
+        window.location.href = 'city2';         // 홈페이지 redirection (2020-05-22)
+    </script>
+
+{% endblock content %}
+
+{% block footer %}
+    <footer class="fixed-bottom bg-info">
+        <div class="text-white font-italic text-right mr-5">
+            Copyright &copy; 2020 제품 설치 유지 관리 프로그램 by SUHDOL
+        </div>
+    </footer>
+{% endblock %}

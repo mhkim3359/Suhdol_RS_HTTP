@@ -1,0 +1,503 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}제품 설치 유지 관리 시스템{% endblock %}
+
+{% block extra-style %}
+<style>
+  body {
+    overflow:hidden;
+  }
+
+  .powered {
+    position: relative;
+    top: 77%;
+    color: #cc0;
+    font-style: italic;
+  }
+
+  #map {
+    border-top: 0px solid #ccc;
+    border-bottom: 0px solid #ccc;
+    padding-bottom: 62%;
+  }
+
+  #list_top {
+    padding-top: 15px;
+  }
+
+  .city_button {
+    background-color:rgb(165, 206, 238);
+    border: 0;
+    outline: 0;
+  }
+
+  .col-sm-2 {
+    background-color:rgb(165, 206, 238);
+    padding-bottom: 130px;
+  }
+
+  .col-sm {
+    background-color:rgb(165, 206, 238);
+  }
+
+  #int_list {
+    background-color:rgb(165, 206, 238);
+  }
+
+  /* Remove default bullets */
+  ul, #myUL {
+    list-style-type: none;
+  }
+
+  /* Remove margins and padding from the parent ul */
+  #myUL {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Style the caret/arrow */
+  .caret {
+    cursor: pointer;
+    user-select: none; /* Prevent text selection */
+  }
+
+  /* Create the caret/arrow with a unicode, and style it */
+  .caret::before {
+    content: "\25B6";
+    color: black;
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  /* Rotate the caret/arrow icon when clicked on (using JavaScript) */
+  .caret-down::before {
+    transform: rotate(90deg);
+  }
+
+  /* Hide the nested list */
+  .nested {
+    display: none;
+  }
+
+  /* Show the nested list when the user clicks on the caret/arrow (with JavaScript) */
+  .active {
+    display: block;
+  }
+
+  /* 도시명 목록 개별 스크롤 제어를 위한 높이 조절용 설정(2020-09-21 by pooh) */
+  .row-height{
+    height: 100vh;
+  }
+
+  .search { position:absolute;z-index:1000;top:20px;left:20px; }
+  .search #address { width:150px;height:20px;line-height:20px;border:solid 1px #555;padding:5px;font-size:12px;box-sizing:content-box; }
+  .search #submit { height:30px;line-height:30px;padding:0 10px;font-size:12px;border:solid 1px #555;border-radius:3px;cursor:pointer;box-sizing:content-box; }
+
+</style>
+{% endblock extra-style %}
+
+{% block content %}
+
+<!-- 
+    지도 목록에서 해당 도시명 클릭시 그 도시의 중심지역으로 이동하도록
+    좌표 및 확대 배율 지정
+-->
+<script>
+  window.addEventListener("load", function() {
+  // 등록된 모든 도시에 대한 초기 위경도 좌표 및 ZOOM LEVEL로 이동
+  {% for city in object_list %}
+  document.getElementById("{{ city.city_name }}").onclick = function()
+  {
+      var city_name = new naver.maps.LatLng({{ city.latitude }}, {{ city.longitude }});
+      map.setZoom({{ city.zoom }}, true);
+      map.setCenter(city_name);
+  }
+  {% endfor %}
+
+  // 지도가 특정 교차로에서 깨지는 문제가 있으므로 이 기능 당분간 보류
+  // 웹 브라우저 스크롤 포인트하고 맞지 않은면 하단에 비활성화 영역이 존재하게 되는데 이런 경우
+  // 마우스로 스크롤바를 상단으로 이동시킨 다음에 마우스 드래그를 이용하여 상하단 영역을 오가면 사라짐.
+  // 0.0004000 처리 해준 이유 : footer로 인해 아래 영역이 가려져 위치 계산에 오차가 발생함.
+  {% for city in object_list %}
+    {% for item in city.intersection_set.all %}
+        document.getElementById("{{ item.int_name }}").onclick = function(e) {
+            var int_location = new naver.maps.LatLng({{item.latitude}} - 0.0002500, {{item.longitude}});
+            map.setCenter(int_location);
+            map.setZoom(18, true);
+            // 지도 하단부 꺠짐 현상때문에 스크롤 위치를 최상단으로 이동
+            window.scrollTo(0, 0);
+        }
+    {% endfor %}
+  {% endfor %}
+  });
+</script>
+
+<!-- 도시 목록만 스크롤 처리하기 위하여 row-height class 추가 및 style 수정 - 2020-09-21 by pooh -->
+<div class="row row-height">
+  <div class="col-sm-2" id="list_top" style="height:100%;overflow-y:auto;">
+    <!-- 도시 목록 트리 구성 부분 -->
+    <ul id="myUL">
+      {% for item in object_list %}
+        <li><h5 class="caret"><input class = "city_button" id="{{item.city_name}}" type="button" value={{ item.city_name }} />
+          ({{ item.intersection_set.count }})</h5>
+          <ul class="nested">
+            {% for intersection in item.intersection_set.all %}
+            <li id="int_list">
+              <!-- old version
+              <a id = {{intersection.int_name}} href="{{ intersection.get_absolute_url }}">{{ intersection.int_name }}</a>
+              -->
+              <input class = "city_button" id="{{intersection.int_name}}" type="button" value={{ intersection.int_name }} />
+            </li>
+            {% endfor %}
+          </ul>
+        </li>
+      {% endfor %}
+    </ul>
+    <script>
+      var toggler = document.getElementsByClassName("caret");
+          
+      for (var i = 0; i < toggler.length; i++) {
+        toggler[i].addEventListener("click", function() {
+          this.parentElement.querySelector(".nested").classList.toggle("active");
+          this.classList.toggle("caret-down");
+        });
+      }
+    </script>
+  </div>
+        
+  <div class="col-sm">
+    <div id="map" style="width:100%;height:100%;">
+      <!-- 2020-09-01 : 주소 검색창 추가 -->
+      <div class="search" style="">
+        <input id="address" type="text" placeholder="검색할 주소" value="일산로 138" />
+        <input id="submit" type="button" value="주소 검색" />
+      </div>
+    </div>
+    <br>
+    <script>
+      // 마커 설정 함수 (2020-05-28 by fantasy8)
+      // arguments 동적 인자 변수 사용
+      var markerSet = function() 
+      {
+        var latitude, longitude;
+        latitude = (arguments[1] + arguments[3]) / 2;
+        longitude = (arguments[2] + arguments[4]) / 2;
+        var marker = new naver.maps.Marker({
+          position: new naver.maps.LatLng(latitude, longitude),
+          clickable: true,
+          map: arguments[0],
+          title: arguments[5],
+          int_id: arguments[6],
+          icon: {
+              url: arguments[7],
+              size: new naver.maps.Size(32, 32),
+              origin: new naver.maps.Point(0, 0),
+              anchor: new naver.maps.Point(16, 16)
+          },
+        });
+        return marker;
+      }
+        
+      var mapOptions = { 
+        center: new naver.maps.LatLng(37.629125, 126.974982), 
+        mapTypeControl: true,
+        zoomControl: true,
+        zoomControlOptions: {
+          style: naver.maps.ZoomControlStyle.SMALL,
+          position: naver.maps.Position.TOP_RIGHT
+        },
+        scaleControl: true,
+        scaleControlOptions: {
+          position: naver.maps.Position.LEFT_CENTER
+        },
+        zoom: 14,
+      }; 
+    
+      var map = new naver.maps.Map('map', mapOptions); 
+
+      {% for city in object_list %}
+        {% for item in city.intersection_set.all %}
+          if ("{{ item.product_type }}" == "교통신호제어기") {
+            if ("{{ item.man_company }}" == "서돌전자통신") {
+              var marker = markerSet(map, {{ item.latitude }}, {{ item.longitude }}, {{ item.latitude2 }}, {{ item.longitude2 }},
+                '{{ item.int_name }}({{ item.model_name }})', '{{ item.id }}', "{% static 'img/marker_7.png' %}");
+            }
+            else if ("{{ item.man_company }}" == "코스텍" | 
+                    "{{ item.man_company }}" == "태림전자") {
+              var marker = markerSet(map, {{ item.latitude }}, {{ item.longitude }}, {{ item.latitude2 }}, {{ item.longitude2 }},
+                '{{ item.int_name }}({{ item.model_name }})', '{{ item.id }}', "{% static 'img/marker_4.png' %}");
+            }
+            else if ("{{ item.man_company }}" == "세인시스템" | 
+                    "{{ item.man_company }}" == "한국전기교통") {
+              var marker = markerSet(map, {{ item.latitude }}, {{ item.longitude }}, {{ item.latitude2 }}, {{ item.longitude2 }},
+                '{{ item.int_name }}({{ item.model_name }})', '{{ item.id }}', "{% static 'img/marker_1.png' %}");
+            }
+            else {
+              var marker = markerSet(map, {{ item.latitude }}, {{ item.longitude }}, {{ item.latitude2 }}, {{ item.longitude2 }},
+                '{{ item.int_name }}({{ item.model_name }})', '{{ item.id }}', "{% static 'img/marker_5.png' %}");
+            }
+          }
+          else if ("{{ item.product_type }}" == "영상검지기") {
+            var marker = markerSet(map, {{ item.latitude }}, {{ item.longitude }}, {{ item.latitude2 }}, {{ item.longitude2 }},
+              '{{ item.int_name }}({{ item.model_name }})', '{{ item.id }}', "{% static 'img/cam_marker_1.png' %}");
+          }
+          else {
+              var marker = markerSet(map, {{ item.latitude }}, {{ item.longitude }}, {{ item.latitude2 }}, {{ item.longitude2 }},
+                '{{ item.int_name }}({{ item.model_name }})', '{{ item.id }}', "{% static 'img/pushbutton.png' %}");
+          }
+
+          naver.maps.Event.addListener(marker, 'click', function(e) {
+            //console.log(e.overlay.int_id);
+            url = 'intersection/'+ e.overlay.int_id;
+            //console.log(url);
+            window.open(url);               // 새창열기
+            //window.location.href = url;   // 기존창 Redirection
+          });
+        {% endfor %}
+      {% endfor %}
+
+      var infoWindow = new naver.maps.InfoWindow({
+        anchorSkew: true
+      });
+
+      map.setCursor('pointer');
+
+      function searchCoordinateToAddress(latlng) {
+        infoWindow.close();
+        naver.maps.Service.reverseGeocode({
+          coords: latlng,
+          orders: [
+              naver.maps.Service.OrderType.ROAD_ADDR,
+              naver.maps.Service.OrderType.ADDR
+          ].join(',')
+        }, function(status, response) {
+          if (status === naver.maps.Service.Status.ERROR) {
+            return alert('Something Wrong!');
+          }
+
+          var items = response.v2.results,
+            address = '',
+            htmlAddresses = [];
+
+          for (var i=0, ii=items.length, item, addrType; i<ii; i++) {
+            item = items[i];
+            address = makeAddress(item) || '';
+            addrType = item.name === 'roadaddr' ? '[도로명 주소]' : '[지번 주소]';
+
+            htmlAddresses.push((i+1) +'. '+ addrType +' '+ address);
+          }
+
+          infoWindow.setContent([
+            '<div style="padding:10px;min-width:200px;line-height:150%;">',
+            '<h5 style="margin-top:5px;">검색 좌표</h5><br />',
+            htmlAddresses.join('<br />'),
+            '</div>'
+          ].join('\n'));
+
+          infoWindow.open(map, latlng);
+        });
+      }
+
+      function searchAddressToCoordinate(address) {
+        naver.maps.Service.geocode({
+            query: address
+        }, function(status, response) {
+          if (status === naver.maps.Service.Status.ERROR) {
+            return alert('Something Wrong!');
+          }
+
+          if (response.v2.meta.totalCount === 0) {
+            // return alert('totalCount' + response.v2.meta.totalCount);
+            return alert('존재하지 않음');
+          }
+
+          var htmlAddresses = [],
+            item = response.v2.addresses[0],
+            point = new naver.maps.Point(item.x, item.y);
+
+          if (item.roadAddress) {
+            htmlAddresses.push('[도로명 주소] ' + item.roadAddress);
+          }
+
+          if (item.jibunAddress) {
+            htmlAddresses.push('[지번 주소] ' + item.jibunAddress);
+          }
+
+          infoWindow.setContent([
+            '<div style="padding:10px;min-width:200px;line-height:150%;">',
+            '<h5 style="margin-top:5px;"><i>검색 주소 : '+ address +'</i></h5><br />',
+            htmlAddresses.join('<br />'),
+            '</div>'
+          ].join('\n'));
+
+          map.setCenter(point);
+          infoWindow.open(map, point);
+        });
+      }
+
+    function initGeocoder() {
+      if (!map.isStyleMapReady) {
+        return;
+      }
+
+      map.addListener('click', function(e) {
+        searchCoordinateToAddress(e.coord);
+      });
+
+      $('#address').on('keydown', function(e) {
+        var keyCode = e.which;
+
+        if (keyCode === 13) { // Enter Key
+            searchAddressToCoordinate($('#address').val());
+        }
+      });
+
+      $('#submit').on('click', function(e) {
+        e.preventDefault();
+
+        searchAddressToCoordinate($('#address').val());
+      });
+
+      searchAddressToCoordinate('일산로 138');
+    }
+
+    function makeAddress(item) {
+      if (!item) {
+        return;
+      }
+
+      var name = item.name,
+        region = item.region,
+        land = item.land,
+        isRoadAddress = name === 'roadaddr';
+
+      var sido = '', sigugun = '', dongmyun = '', ri = '', rest = '';
+
+      if (hasArea(region.area1)) {
+        sido = region.area1.name;
+      }
+
+      if (hasArea(region.area2)) {
+        sigugun = region.area2.name;
+      }
+
+      if (hasArea(region.area3)) {
+        dongmyun = region.area3.name;
+      }
+
+      if (hasArea(region.area4)) {
+        ri = region.area4.name;
+      }
+
+      if (land) {
+        if (hasData(land.number1)) {
+          if (hasData(land.type) && land.type === '2') {
+              rest += '산';
+          }
+
+          rest += land.number1;
+
+          if (hasData(land.number2)) {
+              rest += ('-' + land.number2);
+          }
+        }
+
+        if (isRoadAddress === true) {
+          if (checkLastString(dongmyun, '면')) {
+            ri = land.name;
+          } else {
+            dongmyun = land.name;
+            ri = '';
+          }
+
+          if (hasAddition(land.addition0)) {
+            rest += ' ' + land.addition0.value;
+          }
+        }
+      }
+
+      return [sido, sigugun, dongmyun, ri, rest].join(' ');
+    }
+
+    function hasArea(area) {
+      return !!(area && area.name && area.name !== '');
+    }
+
+    function hasData(data) {
+      return !!(data && data !== '');
+    }
+
+    function checkLastString (word, lastString) {
+      return new RegExp(lastString + '$').test(word);
+    }
+
+    function hasAddition (addition) {
+      return !!(addition && addition.value);
+    }
+
+    naver.maps.onJSContentLoaded = initGeocoder;
+    naver.maps.Event.once(map, 'init_stylemap', initGeocoder);
+    </script>
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block footer %}
+<script>
+  $(document).ready(() => {
+    var str = "";
+    var total_count = 0;
+    var product_count = [0, 0, 0, 0];
+
+    // 장비별 전체 개수 추출
+    {% for item in object_list %}
+      {% for intersection in item.intersection_set.all %}
+        if ("{{ intersection.product_type }}" == "교통신호제어기")
+          product_count[0] += 1;
+        else if ("{{ intersection.product_type }}" == "영상검지기")
+          product_count[1] += 1;
+        else if ("{{ intersection.product_type }}" == "루프검지기")
+          product_count[2] += 1;
+        else
+          product_count[3] += 1;
+      {% endfor %}
+    {% endfor %}
+
+    for (var i = 0; i < product_count.length; i++) {
+        total_count += product_count[i];
+    }
+
+    str += "<span>";
+    str += "설치 제품 총 개수(";
+    str += String(total_count);
+    str += ") : "
+    str += "교통신호제어기("
+    str += String(product_count[0]);
+    str += "), ";
+    str += "영상검지기("
+    str += String(product_count[1]);
+    str += "), "
+    str += "루프검지기("
+    str += String(product_count[2]);
+    str += "), "
+    str += "기타("
+    str += String(product_count[4]);
+    str += ") "
+    str += "</span>";
+
+    document.getElementById("total_count").innerHTML = str;
+  });
+</script>
+
+<footer class="fixed-bottom bg-info">
+  <div class="text-dark text-left mr-5">
+    <h5><span id="total_count"></span></h5>
+  </div>
+  <div class="text-white font-italic text-right mr-5">
+    Copyright &copy; 2020 제품 설치 관리 시스템 by SUHDOL
+  </div>
+</footer>
+{% endblock %}

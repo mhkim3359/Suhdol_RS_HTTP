@@ -1,0 +1,9 @@
+##########################
+# Unity folders & files
+**/media
+**/blog
+**/bookmark
+**/photo
+##########################
+# Source files
+*.pyc
